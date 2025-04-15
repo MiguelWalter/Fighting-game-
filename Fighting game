@@ -1,0 +1,289 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Shadow Duel: Gravity Edition</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #111;
+      font-family: 'Georgia', serif;
+      color: white;
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 10px;
+    }
+
+    #arena {
+      position: relative;
+      width: 100vw;
+      height: 90vh;
+      background-color: #1a1a1a;
+      overflow: hidden;
+      border-top: 2px solid #333;
+    }
+
+    .fighter {
+      width: 50px;
+      height: 120px; /* Taller characters */
+      background: black;
+      position: absolute;
+      transition: transform 0.1s ease-in-out;
+    }
+
+    .sword {
+      width: 12px;  /* Thicker sword */
+      height: 120px; /* Longer sword */
+      background: white;
+      position: absolute;
+      transition: transform 0.1s ease-in-out;
+    }
+
+    .healthbar {
+      height: 10px;
+      background: red;
+      margin: 5px 20px;
+      border: 1px solid #aaa;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+    }
+
+    .name {
+      font-size: 16px;
+    }
+
+    .hit-effect {
+      animation: hitFlash 0.2s;
+    }
+
+    @keyframes hitFlash {
+      0% { background: red; }
+      100% { background: black; }
+    }
+
+    .platform {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background-color: #333;
+    }
+
+    /* Sword animation */
+    @keyframes stabForward {
+      0% {
+        transform: rotateZ(0deg) translateX(0);
+      }
+      50% {
+        transform: rotateZ(45deg) translateX(30px); /* Stab forward */
+      }
+      100% {
+        transform: rotateZ(0deg) translateX(0); /* Return to original position */
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🗡️ Shadow Duel: Gravity Edition 🧠</h1>
+
+  <div class="container">
+    <div>
+      <div class="name">You (Sir Eldric)</div>
+      <div id="eldric-health" class="healthbar" style="width: 100%;"></div>
+    </div>
+    <div>
+      <div class="name">AI (Baron Thorn)</div>
+      <div id="thorn-health" class="healthbar" style="width: 100%;"></div>
+    </div>
+  </div>
+
+  <div id="arena">
+    <div id="eldric" class="fighter">
+      <div id="eldric-sword" class="sword"></div>
+    </div>
+    <div id="thorn" class="fighter">
+      <div id="thorn-sword" class="sword"></div>
+    </div>
+    <div class="platform"></div>
+  </div>
+
+  <script>
+    const eldric = document.getElementById("eldric");
+    const thorn = document.getElementById("thorn");
+    const eldricSword = document.getElementById("eldric-sword");
+    const thornSword = document.getElementById("thorn-sword");
+
+    const eldricHealthBar = document.getElementById("eldric-health");
+    const thornHealthBar = document.getElementById("thorn-health");
+
+    const arenaHeight = window.innerHeight * 0.9;
+    const groundY = arenaHeight - 30 - 120; // Platform height (30) - fighter height (120)
+
+    let eldricPos = { x: 100, y: groundY, vy: 0, isJumping: false };
+    let thornPos = { x: 800, y: groundY, vy: 0, isJumping: false };
+    let eldricHP = 100;
+    let thornHP = 100;
+
+    const gravity = 1;
+    const jumpStrength = -18;
+    const moveSpeed = 10;
+    const aiSpeed = 3;
+
+    // Attack cooldown
+    const attackCooldown = 500; // 500ms between attacks for both characters
+    let lastEldricAttackTime = 0;
+    let lastThornAttackTime = 0;
+
+    function updatePositions() {
+      // Update positions of characters based on their coordinates
+      eldric.style.left = eldricPos.x + "px";
+      eldric.style.top = eldricPos.y + "px";
+      eldricSword.style.left = "50px";
+      eldricSword.style.top = "0px";
+
+      thorn.style.left = thornPos.x + "px";
+      thorn.style.top = thornPos.y + "px";
+      thornSword.style.left = "-10px";
+      thornSword.style.top = "0px";
+
+      // Eldric faces toward Thorn (AI)
+      if (eldricPos.x < thornPos.x) {
+        eldric.style.transform = "scaleX(1)"; // Eldric faces right
+        eldricSword.style.transform = "rotate(0deg)";
+      } else if (eldricPos.x > thornPos.x) {
+        eldric.style.transform = "scaleX(-1)"; // Eldric faces left
+        eldricSword.style.transform = "rotate(180deg)";
+      }
+
+      // AI (Baron Thorn) always faces away from the player (Sir Eldric)
+      if (thornPos.x < eldricPos.x) {
+        thorn.style.transform = "scaleX(-1)"; // Thorn faces left (away from Eldric)
+        thornSword.style.transform = "rotate(180deg)";
+      } else if (thornPos.x > eldricPos.x) {
+        thorn.style.transform = "scaleX(1)"; // Thorn faces right (away from Eldric)
+        thornSword.style.transform = "rotate(0deg)";
+      }
+    }
+
+    function rectanglesIntersect(r1, r2) {
+      return !(
+        r2.left > r1.right ||
+        r2.right < r1.left ||
+        r2.top > r1.bottom ||
+        r2.bottom < r1.top
+      );
+    }
+
+    function attack(attackerSword, defender, damage, defenderHP, healthBar, defenderId) {
+      // Apply the stabbing animation
+      attackerSword.style.animation = "stabForward 0.2s ease-in-out"; // Trigger the stab animation
+
+      setTimeout(() => {
+        attackerSword.style.animation = ""; // Reset animation
+      }, 200);
+
+      // Update sword hitbox dynamically based on its rotation and length
+      const swordRect = attackerSword.getBoundingClientRect();
+      const defenderRect = defender.getBoundingClientRect();
+
+      if (rectanglesIntersect(swordRect, defenderRect)) {
+        defenderHP -= damage;
+        healthBar.style.width = Math.max(0, defenderHP) + "%";
+        defender.classList.add("hit-effect");
+        setTimeout(() => defender.classList.remove("hit-effect"), 100);
+
+        if (defenderHP <= 0) {
+          alert(${defenderId === "eldric" ? "Baron Thorn (AI)" : "You"} win!);
+          window.location.reload();
+        }
+      }
+
+      return defenderHP;
+    }
+
+    // Game physics loop
+    function physicsLoop() {
+      // Apply gravity to both
+      [eldricPos, thornPos].forEach(pos => {
+        pos.vy += gravity;
+        pos.y += pos.vy;
+
+        if (pos.y >= groundY) {
+          pos.y = groundY;
+          pos.vy = 0;
+          pos.isJumping = false;
+        }
+      });
+
+      updatePositions();
+      requestAnimationFrame(physicsLoop);
+    }
+
+    // AI Logic
+    function aiUpdate() {
+      if (thornHP <= 0 || eldricHP <= 0) return;
+
+      const dx = eldricPos.x - thornPos.x;
+      
+      // Make AI move toward the player
+      if (Math.abs(dx) > 10) {
+        thornPos.x += dx > 0 ? aiSpeed : -aiSpeed;
+      }
+
+      // Ensure Thorn always faces away from the player
+      if (thornPos.x < eldricPos.x) {
+        thorn.style.transform = "scaleX(-1)"; // Thorn faces left (away from Eldric)
+        thornSword.style.transform = "rotate(180deg)";
+      } else if (thornPos.x > eldricPos.x) {
+        thorn.style.transform = "scaleX(1)"; // Thorn faces right (away from Eldric)
+        thornSword.style.transform = "rotate(0deg)";
+      }
+
+      // Attack if close
+      const currentTime = Date.now();
+      if (Math.abs(dx) < 60 && Math.abs(eldricPos.y - thornPos.y) < 40 && currentTime - lastThornAttackTime >= attackCooldown) {
+        eldricHP = attack(thornSword, eldric, 10, eldricHP, eldricHealthBar, "eldric");
+        lastThornAttackTime = currentTime;
+      }
+    }
+
+    setInterval(aiUpdate, 100);
+
+    // Player input
+    document.addEventListener("keydown", (e) => {
+      const currentTime = Date.now();
+      switch (e.key) {
+        case "ArrowLeft": eldricPos.x -= moveSpeed; break;
+        case "ArrowRight": eldricPos.x += moveSpeed; break;
+        case "ArrowUp":
+          if (!eldricPos.isJumping) {
+            eldricPos.vy = jumpStrength;
+            eldricPos.isJumping = true;
+          }
+          break;
+        case "a":
+        case "A":
+          if (currentTime - lastEldricAttackTime >= attackCooldown) {
+            thornHP = attack(eldricSword, thorn, 10, thornHP, thornHealthBar, "thorn");
+            lastEldricAttackTime = currentTime;
+          }
+          break;
+      }
+
+      eldricPos.x = Math.max(0, Math.min(eldricPos.x, window.innerWidth - 50));
+    });
+
+    updatePositions();
+    physicsLoop();
+  </script>
+</body>
+</html>
