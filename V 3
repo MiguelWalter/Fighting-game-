@@ -28,27 +28,30 @@
     }
 
     .fighter {
-      width: 50px;
+      width: 80px;
       height: 120px;
-      background-size: cover;
+      background-size: 240px 120px;
       background-repeat: no-repeat;
       position: absolute;
       transition: transform 0.1s ease-in-out;
     }
 
     #eldric {
-      background-image: url('https://i.imgur.com/TFkV1lP.png');
+      background-image: url('https://i.imgur.com/fDvu8ex.png');
     }
 
     #thorn {
-      background-image: url('https://i.imgur.com/Q7VZcRL.png');
+      background-image: url('https://i.imgur.com/yDjtrz5.png');
     }
 
     .sword {
-      width: 12px;
-      height: 120px;
-      background: white;
+      width: 40px;
+      height: 40px;
+      background-image: url('https://i.imgur.com/yU7Zhzj.png');
+      background-size: cover;
       position: absolute;
+      top: 40px;
+      left: 50px;
       transition: transform 0.1s ease-in-out;
     }
 
@@ -75,8 +78,8 @@
     }
 
     @keyframes hitFlash {
-      0% { background: red; }
-      100% { background: black; }
+      0% { filter: brightness(2); }
+      100% { filter: brightness(1); }
     }
 
     .platform {
@@ -86,12 +89,6 @@
       width: 100%;
       height: 30px;
       background-color: #333;
-    }
-
-    @keyframes stabForward {
-      0% { transform: rotateZ(0deg) translateX(0); }
-      50% { transform: rotateZ(45deg) translateX(30px); }
-      100% { transform: rotateZ(0deg) translateX(0); }
     }
   </style>
 </head>
@@ -139,24 +136,38 @@
 
     const gravity = 1;
     const jumpStrength = -18;
-    const moveSpeed = 10;
-    const aiSpeed = 3;
-
+    const moveSpeed = 60; // Increased movement speed (faster)
+    const aiSpeed = 15; // Increased AI speed
     const attackCooldown = 500;
     let lastEldricAttackTime = 0;
     let lastThornAttackTime = 0;
+
+    let eldricIsAttacking = false;
+    let thornIsAttacking = false;
+
+    const smoothingFactor = 0.15; // Faster smoothing factor (more responsive movement)
+
+    function updateSpriteFrame(character, frameIndex) {
+      character.style.backgroundPosition = `-${frameIndex * 80}px 0px`;
+    }
+
+    // Smooth horizontal movement using linear interpolation (lerp)
+    function smoothMove(currentPos, targetPos) {
+      return currentPos + (targetPos - currentPos) * smoothingFactor;
+    }
 
     function updatePositions() {
       eldric.style.left = eldricPos.x + "px";
       eldric.style.top = eldricPos.y + "px";
       eldricSword.style.left = "50px";
-      eldricSword.style.top = "0px";
+      eldricSword.style.top = "40px";
 
       thorn.style.left = thornPos.x + "px";
       thorn.style.top = thornPos.y + "px";
       thornSword.style.left = "-10px";
-      thornSword.style.top = "0px";
+      thornSword.style.top = "40px";
 
+      // Flip sprite direction
       eldric.style.transform = eldricPos.x < thornPos.x ? "scaleX(1)" : "scaleX(-1)";
       eldricSword.style.transform = eldricPos.x < thornPos.x ? "rotate(0deg)" : "rotate(180deg)";
 
@@ -165,17 +176,20 @@
     }
 
     function rectanglesIntersect(r1, r2) {
-      return !(
-        r2.left > r1.right ||
-        r2.right < r1.left ||
-        r2.top > r1.bottom ||
-        r2.bottom < r1.top
-      );
+      return !(r2.left > r1.right || r2.right < r1.left || r2.top > r1.bottom || r2.bottom < r1.top);
     }
 
     function attack(attackerSword, defender, damage, defenderHP, healthBar, defenderId) {
-      attackerSword.style.animation = "stabForward 0.2s ease-in-out";
-      setTimeout(() => attackerSword.style.animation = "", 200);
+      const attacker = defenderId === "thorn" ? eldric : thorn;
+      const isEldric = defenderId === "thorn";
+
+      if (isEldric) eldricIsAttacking = true;
+      else thornIsAttacking = false;
+
+      setTimeout(() => {
+        if (isEldric) eldricIsAttacking = false;
+        else thornIsAttacking = false;
+      }, 300);
 
       const swordRect = attackerSword.getBoundingClientRect();
       const defenderRect = defender.getBoundingClientRect();
@@ -218,25 +232,33 @@
 
       if (Math.abs(dx) > 10) {
         thornPos.x += dx > 0 ? aiSpeed : -aiSpeed;
+        if (!thornIsAttacking) updateSpriteFrame(thorn, 1);
       }
 
       const currentTime = Date.now();
       if (Math.abs(dx) < 60 && Math.abs(eldricPos.y - thornPos.y) < 40 && currentTime - lastThornAttackTime >= attackCooldown) {
         eldricHP = attack(thornSword, eldric, 10, eldricHP, eldricHealthBar, "eldric");
         lastThornAttackTime = currentTime;
+        updateSpriteFrame(thorn, 2);
       }
+
+      if (!thornIsAttacking) updateSpriteFrame(thorn, 0);
     }
 
     setInterval(aiUpdate, 100);
 
     document.addEventListener("keydown", (e) => {
       const currentTime = Date.now();
+      let moved = false;
+
       switch (e.key) {
         case "ArrowLeft":
-          eldricPos.x -= moveSpeed;
+          eldricPos.x = smoothMove(eldricPos.x, eldricPos.x - moveSpeed);
+          moved = true;
           break;
         case "ArrowRight":
-          eldricPos.x += moveSpeed;
+          eldricPos.x = smoothMove(eldricPos.x, eldricPos.x + moveSpeed);
+          moved = true;
           break;
         case "ArrowUp":
           if (!eldricPos.isJumping) {
@@ -249,11 +271,15 @@
           if (currentTime - lastEldricAttackTime >= attackCooldown) {
             thornHP = attack(eldricSword, thorn, 10, thornHP, thornHealthBar, "thorn");
             lastEldricAttackTime = currentTime;
+            updateSpriteFrame(eldric, 2);
           }
           break;
       }
 
-      eldricPos.x = Math.max(0, Math.min(eldricPos.x, window.innerWidth - 50));
+      if (moved) {
+        eldricPos.x = Math.max(0, Math.min(eldricPos.x, window.innerWidth - 50));
+        updateSpriteFrame(eldric, 1); // Walking animation
+      }
     });
 
     updatePositions();
@@ -261,4 +287,3 @@
   </script>
 </body>
 </html>
- 
