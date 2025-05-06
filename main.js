@@ -75,6 +75,9 @@ loadSprite("death-player2", "assets/death-player2.png", {
     sliceX: 7, sliceY: 1, anims: { "death": { from: 0, to: 6, speed: 10}}
 })
 
+// Load the kaboom menu background image
+loadSprite("kaboom-background", "assets/kaboom_background.png")
+
 scene("fight", () => {
     let player1TotalAttacks = 0
     let player1Hits = 0
@@ -491,6 +494,14 @@ Player 2: ${player2Hits}/${player2TotalAttacks} hits
 })
 
 scene("menu", () => {
+    // Add the menu background image
+    add([
+        sprite("kaboom-background"),
+        scale(1.24),
+        pos(0, 0),
+        origin("topleft"),
+    ])
+
     add([
         text("2D FIGHTER", { size: 48 }),
         pos(center().x, center().y - 100),
