@@ -368,12 +368,14 @@ scene("fight", () => {
         if (player1.health <= 0 && !gameOver) {
             gameOver = true
             console.log("Player 2 wins!")
+            go("start") // Go back to the start menu when the game ends
         }
     })
     player2.onUpdate(() => {
         if (player2.health <= 0 && !gameOver) {
             gameOver = true
             console.log("Player 1 wins!")
+            go("start") // Go back to the start menu when the game ends
         }
     })
 })
