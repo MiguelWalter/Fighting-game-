@@ -5,7 +5,7 @@ kaboom({
     debug: false
 })
 
-// Load all sprites first
+// Load all sprites
 loadSprite("background", "assets/background/background_layer_1.png")
 loadSprite("trees", "assets/background/background_layer_2.png")
 loadSpriteAtlas("assets/oak_woods_tileset.png", {
@@ -144,6 +144,9 @@ scene("fight", () => {
     let player1Hits = 0
     let player2TotalAttacks = 0
     let player2Hits = 0
+    let gameOver = false
+    let countInterval
+    
     const background = add([
         sprite("background"),
         scale(4)
@@ -189,36 +192,36 @@ scene("fight", () => {
 
     shop.play("default")
 
-   // left invisible wall
-   add([
-    rect(16, 720),
-    area(),
-    body({isStatic: true}),
-    pos(-20,0)
-   ])
+    // left invisible wall
+    add([
+        rect(16, 720),
+        area(),
+        body({isStatic: true}),
+        pos(-20,0)
+    ])
 
-   // right invisible wall
-   add([
-    rect(16, 720),
-    area(),
-    body({isStatic: true}),
-    pos(1280,0)
-   ])
+    // right invisible wall
+    add([
+        rect(16, 720),
+        area(),
+        body({isStatic: true}),
+        pos(1280,0)
+    ])
 
-   background.add([
-    sprite("fence"),
-    pos(85, 125)
-   ])
+    background.add([
+        sprite("fence"),
+        pos(85, 125)
+    ])
 
-   background.add([
-    sprite("fence"),
-    pos(10, 125)
-   ])
+    background.add([
+        sprite("fence"),
+        pos(10, 125)
+    ])
 
-   background.add([
-    sprite("sign"),
-    pos(290, 115)
-   ])
+    background.add([
+        sprite("sign"),
+        pos(290, 115)
+    ])
 
     function makePlayer(posX, posY, width, height, scaleFactor, id) {
         return add([
@@ -242,12 +245,16 @@ scene("fight", () => {
         ])
     }
     
-
     setGravity(1200)
 
     const player1 = makePlayer(200, 100, 16, 42, 4, "player1")
     player1.use(sprite(player1.sprites.idle))
     player1.play("idle")
+
+    const player2 = makePlayer(1000, 200, 16, 52, 4, "player2")
+    player2.use(sprite(player2.sprites.idle))
+    player2.play("idle")
+    player2.flipX = true
 
     function run(player, speed, flipPlayer) {
         if (player.health === 0) {
@@ -307,7 +314,6 @@ scene("fight", () => {
         }
     }
     
-
     function resetAfterJump(player) {
         if (player.isGrounded() && player.isCurrentlyJumping) {
             player.isCurrentlyJumping = false
@@ -349,8 +355,9 @@ scene("fight", () => {
                 opacity(0),
                 player.id + "attackHitbox"
             ])
-         if (player === player1) player1TotalAttacks++
-         if (player === player2) player2TotalAttacks++
+            
+            if (player === player1) player1TotalAttacks++
+            if (player === player2) player2TotalAttacks++
 
             player.play("attack", {
                 onEnd: () => {
@@ -368,11 +375,6 @@ scene("fight", () => {
     onKeyRelease("space", () => {
         destroyAll(player1.id + "attackHitbox")
     })
-
-    const player2 = makePlayer(1000, 200, 16, 52, 4, "player2")
-    player2.use(sprite(player2.sprites.idle))
-    player2.play("idle")
-    player2.flipX = true
 
     onKeyDown("right", () => {
         run(player2, 500, false)
@@ -414,7 +416,7 @@ scene("fight", () => {
         color(10,10,10),
         area(),
         anchor("center")
-       ])
+    ])
     
     const count = counter.add([
         text("60"),
@@ -432,13 +434,73 @@ scene("fight", () => {
         pos(center())
     ])
     
-    let gameOver = false
+    // Player 1 Health Bar
+    const player1HealthContainer = add([
+        rect(500, 70),
+        area(),
+        outline(5),
+        pos(90, 20),
+        color(200,0,0)
+    ])
+       
+    const player1HealthBar = player1HealthContainer.add([
+        rect(498, 65),
+        color(0,180,0),
+        pos(498, 70 - 2.5),
+        rotate(180)
+    ])
+
+    // Player 2 Health Bar
+    const player2HealthContainer = add([
+        rect(500, 70),
+        area(),
+        outline(5),
+        pos(690, 20),
+        color(200,0,0)
+    ])
+       
+    const player2HealthBar = player2HealthContainer.add([
+        rect(498, 65),
+        color(0,180,0),
+        pos(2.5, 2.5),
+    ])
+
+    // Collision detection
+    player1.onCollide(player2.id + "attackHitbox", () => {
+        if (gameOver || player1.isInvincible) return;
     
-    // Add restart button that appears when game is over
-    let restartButton
-    onKeyDown("enter", () => {
-        if (gameOver) {
-            go("fight")
+        if (player1.health !== 0) {
+            player1.health -= 50
+            player2Hits++
+    
+            tween(player1HealthBar.width, player1.health, 1, (val) => {
+                player1HealthBar.width = val
+            }, easings.easeOutSine)
+        }
+    
+        if (player1.health === 0) {
+            clearInterval(countInterval)
+            declareWinner(winningText, player1, player2)
+            gameOver = true
+        }
+    })
+    
+    player2.onCollide(player1.id + "attackHitbox", () => {
+        if (gameOver || player2.isInvincible) return;
+    
+        if (player2.health !== 0) {
+            player2.health -= 50
+            player1Hits++
+    
+            tween(player2HealthBar.width, player2.health, 1, (val) => {
+                player2HealthBar.width = val
+            }, easings.easeOutSine)
+        }
+    
+        if (player2.health === 0) {
+            clearInterval(countInterval)
+            declareWinner(winningText, player1, player2)
+            gameOver = true
         }
     })
 
@@ -463,10 +525,10 @@ scene("fight", () => {
     
         winningText.text = resultText
     
-        // Add hit/miss tracking display here
+        // Add hit/miss tracking display
         const statsText = `
-    Player 1: ${player1Hits}/${player1TotalAttacks} hits
-    Player 2: ${player2Hits}/${player2TotalAttacks} hits
+Player 1: ${player1Hits}/${player1TotalAttacks} hits
+Player 2: ${player2Hits}/${player2TotalAttacks} hits
         `.trim()
     
         add([
@@ -477,9 +539,7 @@ scene("fight", () => {
         ])
         
         // Add restart button
-        if (restartButton) destroy(restartButton)
-        
-        restartButton = add([
+        const restartButton = add([
             rect(240, 60, { radius: 15 }),
             pos(center().x, center().y + 180),
             area(),
@@ -514,9 +574,14 @@ scene("fight", () => {
         restartButton.onClick(() => {
             go("fight")
         })
+        
+        // Also restart when Enter is pressed
+        onKeyPress("enter", () => {
+            go("fight")
+        })
     }
     
-    const countInterval = setInterval(() => {
+    countInterval = setInterval(() => {
         if (count.timeLeft === 0) {
             clearInterval(countInterval)
     
@@ -558,81 +623,6 @@ scene("fight", () => {
         count.timeLeft--
         count.text = count.timeLeft
     }, 1000)
-    
-
-    const player1HealthContainer = add([
-        rect(500, 70),
-        area(),
-        outline(5),
-        pos(90, 20),
-        color(200,0,0)
-       ])
-       
-    const player1HealthBar = player1HealthContainer.add([
-        rect(498, 65),
-        color(0,180,0),
-        pos(498, 70 - 2.5),
-        rotate(180)
-    ])
-
-    player1.onCollide(player2.id + "attackHitbox", () => {
-        if (gameOver || player1.isInvincible) return;
-    
-        if (player1.health !== 0) {
-            player1.health -= 50
-            player2Hits++
-    
-            tween(player1HealthBar.width, player1.health, 1, (val) => {
-                player1HealthBar.width = val
-            }, easings.easeOutSine)
-        }
-    
-        if (player1.health === 0) {
-            clearInterval(countInterval)
-            declareWinner(winningText, player1, player2)
-            gameOver = true
-        }
-    })
-    
-
-    const player2HealthContainer = add([
-        rect(500, 70),
-        area(),
-        outline(5),
-        pos(690, 20),
-        color(200,0,0)
-    ])
-       
-    const player2HealthBar = player2HealthContainer.add([
-        rect(498, 65),
-        color(0,180,0),
-        pos(2.5, 2.5),
-    ])
-    
-    player2.onCollide(player1.id + "attackHitbox", () => {
-        if (gameOver || player2.isInvincible) return;
-    
-        if (player2.health !== 0) {
-            player2.health -= 50
-            player1Hits++
-    
-            tween(player2HealthBar.width, player2.health, 1, (val) => {
-                player2HealthBar.width = val
-            }, easings.easeOutSine)
-        }
-    
-        if (player2.health === 0) {
-            clearInterval(countInterval)
-            declareWinner(winningText, player1, player2)
-            gameOver = true
-        }
-    })
-    
-    if (player2.health === 0) {
-        clearInterval(countInterval)
-        declareWinner(winningText, player1, player2) 
-        gameOver = true
-    }
 })
 
 // Start with the start menu
