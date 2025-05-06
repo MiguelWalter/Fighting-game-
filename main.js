@@ -235,9 +235,9 @@ scene("fight", () => {
             player.play("jump")
             player.isCurrentlyJumping = true
     
-            // Make the player invincible for 0.10 seconds
+            // Make the player invincible for 0.5 seconds
             player.isInvincible = true
-            wait(0.10, () => {
+            wait(0.5, () => {
                 player.isInvincible = false
             })
         }
@@ -529,5 +529,6 @@ scene("fight", () => {
             gameOver = true
         }
     })
+
 
 go("fight")
