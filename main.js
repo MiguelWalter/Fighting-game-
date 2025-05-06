@@ -170,6 +170,46 @@ scene("fight", () => {
         pos(290, 115)
     ])
 
+    // Life bars
+    const player1LifeBar = add([
+        rect(200, 20),
+        pos(50, 20),
+        color(255, 0, 0),
+        { value: 500 }
+    ])
+
+    const player2LifeBar = add([
+        rect(200, 20),
+        pos(1030, 20),
+        color(0, 0, 255),
+        { value: 500 }
+    ])
+
+    function updateLifeBar() {
+        player1LifeBar.width = player1.health / 500 * 200
+        player2LifeBar.width = player2.health / 500 * 200
+    }
+
+    // Timer
+    let timeRemaining = 60 // Time in seconds
+    const timerLabel = add([
+        text("Time: " + timeRemaining, { size: 24 }),
+        pos(center().x, 20),
+        anchor("center"),
+        color(255, 255, 255),
+    ])
+
+    // Countdown Timer
+    loop(1, () => {
+        if (timeRemaining > 0) {
+            timeRemaining--
+            timerLabel.text = "Time: " + timeRemaining
+        } else if (timeRemaining === 0) {
+            console.log("Time's up!")
+            go("start") // Go back to start menu if time runs out
+        }
+    })
+
     function makePlayer(posX, posY, width, height, scaleFactor, id) {
         return add([
             pos(posX, posY),
