@@ -530,5 +530,4 @@ scene("fight", () => {
         }
     })
 
-
 go("fight")
