@@ -1,9 +1,9 @@
 kaboom({
     width: 1280,
     height: 720,
-    scale: 1.24,
-    debug: false
-})
+    scale: 1.se
+})24,
+    debug: fal
 
 loadSprite("background", "assets/background/background_layer_1.png")
 loadSprite("trees", "assets/background/background_layer_2.png")
@@ -44,49 +44,35 @@ loadSprite("fence", "assets/fence_1.png")
 loadSprite("sign", "assets/sign.png")
 
 loadSprite("idle-player1", "assets/idle-player1.png", {
-    sliceX: 8, sliceY: 1, anims: { "idle": {from: 0, to: 7, speed: 12, loop: true} }
+    sliceX: 8, sliceY: 1, anims: { "idle": {from: 0, to: 7, speed: 12, loop: true}}
 })
 loadSprite("jump-player1", "assets/jump-player1.png", {
-    sliceX: 2, sliceY: 1, anims: { "jump": { from: 0, to: 1, speed: 2, loop: true} }
+    sliceX: 2, sliceY: 1, anims: { "jump": { from: 0, to: 1, speed: 2, loop: true}}
 })
 loadSprite("attack-player1", "assets/attack-player1.png", {
-    sliceX: 6, sliceY: 1, anims: { "attack": { from: 1, to: 5, speed: 10} }
+    sliceX: 6, sliceY: 1, anims: { "attack": { from: 1, to: 5, speed: 10}}
 })
 loadSprite("run-player1", "assets/run-player1.png", {
-    sliceX: 8, sliceY: 1, anims: { "run": { from: 0, to: 7, speed: 18} }
+    sliceX: 8, sliceY: 1, anims: { "run": { from: 0, to: 7, speed: 18}}
 })
 loadSprite("death-player1", "assets/death-player1.png", {
-    sliceX: 6, sliceY: 1, anims: { "death": { from: 0, to: 5, speed: 10} }
+    sliceX: 6, sliceY: 1, anims: { "death": { from: 0, to: 5, speed: 10}}
 })
 
 loadSprite("idle-player2", "assets/idle-player2.png", {
-    sliceX: 4, sliceY: 1, anims: { "idle": { from: 0, to: 3, speed: 8, loop: true} }
+    sliceX: 4, sliceY: 1, anims: { "idle": { from: 0, to: 3, speed: 8, loop: true}}
 })
 loadSprite("jump-player2", "assets/jump-player2.png", {
-    sliceX: 2, sliceY: 1, anims: { "jump": { from: 0, to: 1, speed: 2, loop: true} }
+    sliceX: 2, sliceY: 1, anims: {"jump": { from: 0, to: 1, speed: 2, loop: true}}
 })
 loadSprite("attack-player2", "assets/attack-player2.png", {
-    sliceX: 4, sliceY: 1, anims: { "attack": { from: 0, to: 3, speed: 10} }
+    sliceX: 4, sliceY: 1, anims: { "attack": { from: 0, to: 3, speed: 10}}
 })
 loadSprite("run-player2", "assets/run-player2.png", {
-    sliceX: 8, sliceY: 1, anims: { "run": { from: 0, to: 7, speed: 18} }
+    sliceX: 8, sliceY: 1, anims: { "run": { from: 0, to: 7, speed: 18}}
 })
 loadSprite("death-player2", "assets/death-player2.png", {
-    sliceX: 7, sliceY: 1, anims: { "death": { from: 0, to: 6, speed: 10} }
-})
-
-// Start Menu Scene
-scene("start", () => {
-    const startText = add([
-        text("Press ENTER to Start", { size: 48 }),
-        pos(center()),
-        anchor("center"),
-        color(255, 255, 255),
-    ])
-
-    onKeyPress("enter", () => {
-        go("fight") // Transition to the fight scene when the Enter key is pressed
-    })
+    sliceX: 7, sliceY: 1, anims: { "death": { from: 0, to: 6, speed: 10}}
 })
 
 scene("fight", () => {
@@ -108,7 +94,7 @@ scene("fight", () => {
         "------#######-----------",
         "dddddddddddddddddddddddd",
         "dddddddddddddddddddddddd"
-    ], {
+        ], {
         tileWidth: 16,
         tileHeight: 16,
         tiles: {
@@ -139,76 +125,36 @@ scene("fight", () => {
 
     shop.play("default")
 
-    // left invisible wall
-    add([
-        rect(16, 720),
-        area(),
-        body({isStatic: true}),
-        pos(-20,0)
-    ])
+   // left invisible wall
+   add([
+    rect(16, 720),
+    area(),
+    body({isStatic: true}),
+    pos(-20,0)
+   ])
 
-    // right invisible wall
-    add([
-        rect(16, 720),
-        area(),
-        body({isStatic: true}),
-        pos(1280,0)
-    ])
+   // right invisible wall
+   add([
+    rect(16, 720),
+    area(),
+    body({isStatic: true}),
+    pos(1280,0)
+   ])
 
-    background.add([
-        sprite("fence"),
-        pos(85, 125)
-    ])
+   background.add([
+    sprite("fence"),
+    pos(85, 125)
+   ])
 
-    background.add([
-        sprite("fence"),
-        pos(10, 125)
-    ])
+   background.add([
+    sprite("fence"),
+    pos(10, 125)
+   ])
 
-    background.add([
-        sprite("sign"),
-        pos(290, 115)
-    ])
-
-    // Life bars
-    const player1LifeBar = add([
-        rect(200, 20),
-        pos(50, 20),
-        color(255, 0, 0),
-        { value: 500 }
-    ])
-
-    const player2LifeBar = add([
-        rect(200, 20),
-        pos(1030, 20),
-        color(0, 0, 255),
-        { value: 500 }
-    ])
-
-    function updateLifeBar() {
-        player1LifeBar.width = player1.health / 500 * 200
-        player2LifeBar.width = player2.health / 500 * 200
-    }
-
-    // Timer
-    let timeRemaining = 60 // Time in seconds
-    const timerLabel = add([
-        text("Time: " + timeRemaining, { size: 24 }),
-        pos(center().x, 20),
-        anchor("center"),
-        color(255, 255, 255),
-    ])
-
-    // Countdown Timer
-    loop(1, () => {
-        if (timeRemaining > 0) {
-            timeRemaining--
-            timerLabel.text = "Time: " + timeRemaining
-        } else if (timeRemaining === 0) {
-            console.log("Time's up!")
-            go("start") // Go back to start menu if time runs out
-        }
-    })
+   background.add([
+    sprite("sign"),
+    pos(290, 115)
+   ])
 
     function makePlayer(posX, posY, width, height, scaleFactor, id) {
         return add([
@@ -231,6 +177,7 @@ scene("fight", () => {
             }
         ])
     }
+    
 
     setGravity(1200)
 
@@ -248,7 +195,7 @@ scene("fight", () => {
             player.use(sprite(player.sprites.run))
             player.play("run")
         }
-        player.move(speed, 0)
+        player.move(speed,0)
         player.flipX = flipPlayer
     }
 
@@ -295,6 +242,7 @@ scene("fight", () => {
             })
         }
     }
+    
 
     function resetAfterJump(player) {
         if (player.isGrounded() && player.isCurrentlyJumping) {
@@ -331,14 +279,14 @@ scene("fight", () => {
             const slashY = player.pos.y - 200
             
             add([
-                rect(300, 300),
+                rect(300,300),
                 area(),
-                pos(currentFlip ? slashXFlipped : slashX, slashY),
+                pos(currentFlip ? slashXFlipped: slashX, slashY),
                 opacity(0),
                 player.id + "attackHitbox"
             ])
-            if (player === player1) player1TotalAttacks++
-            if (player === player2) player2TotalAttacks++
+         if (player === player1) player1TotalAttacks++
+         if (player === player2) player2TotalAttacks++
 
             player.play("attack", {
                 onEnd: () => {
@@ -395,29 +343,192 @@ scene("fight", () => {
     onKeyRelease("down", () => {
         destroyAll(player2.id + "attackHitbox")
     })
+    
+    const counter = add([
+        rect(100,100),
+        pos(center().x, center().y - 300),
+        color(10,10,10),
+        area(),
+        anchor("center")
+       ])
+    
+    const count = counter.add([
+        text("60"),
+        area(),
+        anchor("center"),
+        {
+            timeLeft: 60,
+        }
+    ])
 
-    // Restart functionality when the game is over
+    const winningText = add([
+        text(""),
+        area(),
+        anchor("center"),
+        pos(center())
+    ])
+    
     let gameOver = false
-    onKeyDown("r", () => {
-        gameOver = false
-        go("fight")
-    })
+    onKeyDown("enter", () => gameOver ? go("fight") : null)
 
-    // Game over check
-    player1.onUpdate(() => {
-        if (player1.health <= 0 && !gameOver) {
+    function declareWinner(winningText, player1, player2) {
+        let resultText = ""
+    
+        if (player1.health > 0 && player2.health > 0) {
+            resultText = "🔥 SUDDEN DEATH 🔥"
+            winningText.text = resultText
+            return "sudden"
+        } else if (player1.health === 0 && player2.health === 0) {
+            resultText = "Tie!"
+        } else if (player1.health > 0 && player2.health === 0) {
+            resultText = "Player 1 won!"
+            player2.use(sprite(player2.sprites.death))
+            player2.play("death")
+        } else {
+            resultText = "Player 2 won!"
+            player1.use(sprite(player1.sprites.death))
+            player1.play("death")
+        }
+    
+        winningText.text = resultText
+    
+        // Add hit/miss tracking display here
+        const statsText = `
+    Player 1: ${player1Hits}/${player1TotalAttacks} hits
+    Player 2: ${player2Hits}/${player2TotalAttacks} hits
+        `.trim()
+    
+        add([
+            text(statsText, { size: 24 }),
+            pos(center().x, center().y + 80),
+            anchor("center"),
+            z(100)
+        ])
+    }
+    
+    
+
+
+    const countInterval = setInterval(() => {
+        if (count.timeLeft === 0) {
+            clearInterval(countInterval)
+    
+            const result = declareWinner(winningText, player1, player2)
+    
+            if (result === "sudden") {
+                gameOver = false
+    
+                // Set both players to 50 HP
+                player1.health = 50
+                player2.health = 50
+    
+                // Update health bars visually
+                tween(player1HealthBar.width, 50, 0.4, (val) => {
+                    player1HealthBar.width = val
+                })
+    
+                tween(player2HealthBar.width, 50, 0.4, (val) => {
+                    player2HealthBar.width = val
+                })
+    
+                // Show "Sudden Death!" text briefly
+                const suddenText = add([
+                    text("SUDDEN DEATH!", { size: 48 }),
+                    pos(center()),
+                    anchor("center"),
+                    color(255, 0, 0),
+                    z(100),
+                ])
+    
+                wait(2, () => destroy(suddenText))
+            } else {
+                gameOver = true
+            }
+    
+            return
+        }
+    
+        count.timeLeft--
+        count.text = count.timeLeft
+    }, 1000)
+    
+
+    const player1HealthContainer = add([
+        rect(500, 70),
+        area(),
+        outline(5),
+        pos(90, 20),
+        color(200,0,0)
+       ])
+       
+    const player1HealthBar = player1HealthContainer.add([
+        rect(498, 65),
+        color(0,180,0),
+        pos(498, 70 - 2.5),
+        rotate(180)
+    ])
+
+    player1.onCollide(player2.id + "attackHitbox", () => {
+        if (gameOver || player1.isInvincible) return;
+    
+        if (player1.health !== 0) {
+            player1.health -= 50
+            player2Hits++
+    
+            tween(player1HealthBar.width, player1.health, 1, (val) => {
+                player1HealthBar.width = val
+            }, easings.easeOutSine)
+        }
+    
+        if (player1.health === 0) {
+            clearInterval(countInterval)
+            declareWinner(winningText, player1, player2)
             gameOver = true
-            console.log("Player 2 wins!")
-            go("start") // Go back to the start menu when the game ends
         }
     })
-    player2.onUpdate(() => {
-        if (player2.health <= 0 && !gameOver) {
+    
+
+    const player2HealthContainer = add([
+        rect(500, 70),
+        area(),
+        outline(5),
+        pos(690, 20),
+        color(200,0,0)
+    ])
+       
+    const player2HealthBar = player2HealthContainer.add([
+        rect(498, 65),
+        color(0,180,0),
+        pos(2.5, 2.5),
+    ])
+    
+    player2.onCollide(player1.id + "attackHitbox", () => {
+        if (gameOver || player2.isInvincible) return;
+    
+        if (player2.health !== 0) {
+            player2.health -= 50
+            player1Hits++
+    
+            tween(player2HealthBar.width, player2.health, 1, (val) => {
+                player2HealthBar.width = val
+            }, easings.easeOutSine)
+        }
+    
+        if (player2.health === 0) {
+            clearInterval(countInterval)
+            declareWinner(winningText, player1, player2)
             gameOver = true
-            console.log("Player 1 wins!")
-            go("start") // Go back to the start menu when the game ends
         }
     })
-})
+    
+        
+        if (player2.health === 0) {
+            clearInterval(countInterval)
+            declareWinner(winningText, player1, player2) 
+          
+            gameOver = true
+        }
+    })
 
-go("start") // Start the game with the start menu scene
+
+go("fight")
