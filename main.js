@@ -1,9 +1,9 @@
 kaboom({
     width: 1280,
     height: 720,
-    scale: 1.se
-})24,
-    debug: fal
+    scale: 1.24,
+    debug: false
+})
 
 loadSprite("background", "assets/background/background_layer_1.png")
 loadSprite("trees", "assets/background/background_layer_2.png")
@@ -393,10 +393,10 @@ scene("fight", () => {
         winningText.text = resultText
     
         // Add hit/miss tracking display here
-        const statsText = `
+        const statsText = 
     Player 1: ${player1Hits}/${player1TotalAttacks} hits
     Player 2: ${player2Hits}/${player2TotalAttacks} hits
-        `.trim()
+        .trim()
     
         add([
             text(statsText, { size: 24 }),
